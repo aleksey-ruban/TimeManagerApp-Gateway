@@ -1,3 +1,35 @@
+server:
+  port: ${SERVER_PORT}
+
 spring:
   application:
     name: gateway-service
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/v1/auth/**
+            - id: user-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/v1/activities/**
+          default-filters:
+            - AddResponseHeader=X-Gateway, SpringCloudGateway
+
+gateway:
+  whitelist:
+    - /api/v1/auth/start
+    - /api/v1/auth/registration/resend-code
+    - /api/v1/auth/registration/verify
+    - /api/v1/auth/registration/complete
+    - /api/v1/auth/password/reset/start
+    - /api/v1/auth/password/reset/resend-code
+    - /api/v1/auth/password/reset/verify
+    - /api/v1/auth/password/reset/complete
+    - /api/v1/auth/login
+    - /api/v1/auth/refresh-tokens
