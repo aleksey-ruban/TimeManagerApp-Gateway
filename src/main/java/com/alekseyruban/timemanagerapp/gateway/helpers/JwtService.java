@@ -3,9 +3,7 @@ package com.alekseyruban.timemanagerapp.gateway.helpers;
 import com.alekseyruban.timemanagerapp.gateway.exception.ApiException;
 import com.alekseyruban.timemanagerapp.gateway.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,7 +22,7 @@ public class JwtService {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public Long extractSessionId(String token) {
+    public Claims extractClaims(String token) {
         Claims claims = parseToken(token);
         Date expiration = claims.getExpiration();
 
@@ -35,6 +33,14 @@ public class JwtService {
                     "Invalid access token"
             );
         }
+        return claims;
+    }
+
+    public Long extractUserId(Claims claims) {
+        return Long.valueOf(claims.getSubject());
+    }
+
+    public Long extractSessionId(Claims claims) {
         return claims.get("sessionId", Long.class);
     }
 

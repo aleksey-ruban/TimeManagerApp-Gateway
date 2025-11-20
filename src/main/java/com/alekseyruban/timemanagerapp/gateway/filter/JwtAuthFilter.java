@@ -5,6 +5,7 @@ import com.alekseyruban.timemanagerapp.gateway.config.CustomGatewayProperties;
 import com.alekseyruban.timemanagerapp.gateway.exception.ErrorCode;
 import com.alekseyruban.timemanagerapp.gateway.helpers.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -46,9 +47,12 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
         String token = header.substring(7);
 
+        Long userId;
         Long sessionId;
         try {
-            sessionId = jwtService.extractSessionId(token);
+            Claims claims = jwtService.extractClaims(token);
+            userId = jwtService.extractUserId(claims);
+            sessionId = jwtService.extractSessionId(claims);
         } catch (Exception e) {
             ServerHttpResponse response = exchange.getResponse();
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -77,6 +81,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     if (Boolean.TRUE.equals(isValid)) {
                         ServerHttpRequest mutatedRequest = exchange.getRequest()
                                 .mutate()
+                                .header("X-User-Id", String.valueOf(userId))
                                 .header("X-Session-Id", String.valueOf(sessionId))
                                 .build();
                         return chain.filter(exchange.mutate().request(mutatedRequest).build());
